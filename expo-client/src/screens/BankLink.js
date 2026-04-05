@@ -12,6 +12,7 @@ export default function BankLinkScreen({ navigation, route }) {
   const [account, setAccount] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
   const isRegistration = route.params?.isRegistration;
 
   const filteredBanks = ALL_BANKS.filter(b => 
@@ -33,13 +34,15 @@ export default function BankLinkScreen({ navigation, route }) {
   );
 
   const handleLink = async () => {
-    if (!bankObj) {
-      return Alert.alert('Error', 'Please select a Bank Name.');
-    }
-    const cleanAccount = account.replace(/\D/g, ''); // Ensure only digits
+    if (!bankObj) return Alert.alert('Error', 'Please select a Bank Name.');
+    
+    const cleanAccount = account.replace(/\D/g, ''); 
     if (cleanAccount.length < 9 || cleanAccount.length > 18) {
       return Alert.alert('Error', 'Bank account number must be between 9 and 18 digits.');
     }
+
+    setLoading(true);
+    console.log(`[BankLink] Linking to ${API_BASE_URL} for user: ${GlobalStore.userId}`);
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/user/link-bank`, {
@@ -51,21 +54,26 @@ export default function BankLinkScreen({ navigation, route }) {
           accountNo: cleanAccount
         })
       });
+      
       const data = await response.json();
+      setLoading(false);
 
       if (response.ok) {
         Alert.alert('Success', `${bankObj.bank_name} linked securely!`);
         
         // Refresh local bank list
-        const banksRes = await fetch(`${API_BASE_URL}/api/user/banks/${GlobalStore.userId}`);
-        const banksData = await banksRes.json();
-        if (banksData.banks) {
-          GlobalStore.bankAccounts = banksData.banks;
-          await Storage.saveBanks(banksData.banks);
+        try {
+          const banksRes = await fetch(`${API_BASE_URL}/api/user/banks/${GlobalStore.userId}`);
+          const banksData = await banksRes.json();
+          if (banksData.banks) {
+            GlobalStore.bankAccounts = banksData.banks;
+            await Storage.saveBanks(banksData.banks);
+          }
+        } catch (e) {
+          console.warn('Silent failure on banks refresh', e);
         }
 
         if (isRegistration) {
-          // Update persistence with new user info
           await Storage.saveUser({
             userId: GlobalStore.userId,
             mobileNumber: GlobalStore.mobileNumber,
@@ -76,11 +84,12 @@ export default function BankLinkScreen({ navigation, route }) {
           navigation.goBack();
         }
       } else {
-        // Show validation error (e.g. "Incorrect Choose Bank")
-        Alert.alert('Verification Failed', data.error || 'Could not verify account.');
+        Alert.alert('Verification Failed', data.error || data.trace || 'Could not verify account.');
       }
     } catch (error) {
-      Alert.alert('Error', 'Connection failed. Please try again.');
+      setLoading(false);
+      console.error('[BankLink] Network Error:', error);
+      Alert.alert('Network Error', `Could not connect to: ${API_BASE_URL}\nDetails: ${error.message}`);
     }
   };
 
