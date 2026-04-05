@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    
+    {
+      "name": "Run Settlement Backend (Node)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/server.js",
+      "cwd": "${workspaceFolder}/backend",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Run Expo Frontend (Web/Mobile)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["expo", "start", "--clear", "--web"],
+      "cwd": "${workspaceFolder}/expo-client",
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Run Full Hybrid Setup (Backend + Frontend)",
+      "configurations": ["Run Settlement Backend (Node)", "Run Expo Frontend (Web/Mobile)"]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "SmartPay",
+    "slug": "smartpay-gpay-clone",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F1115"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.smartpay.gpay"
+    },
+    "android": {
+      "package": "com.smartpay.gpay",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#0F1115",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "apiUrl": "https://gpay-backend.onrender.com"
+    },
+    "plugins": []
+  }
+}
+
