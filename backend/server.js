@@ -354,6 +354,7 @@ app.post('/api/transfer', async (req, res) => {
 
 app.post('/settle', async (req, res) => {
   const { payerId, payeeId, amount, nonce, signature, timestamp, type } = req.body;
+  console.log(`[Settlement] Processing ${type} sync: ${payerId} -> ${payeeId} (₹${amount})`);
   const client = await pool.connect();
   try {
     await client.query('BEGIN');

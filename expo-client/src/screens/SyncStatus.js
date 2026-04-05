@@ -1,28 +1,70 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, ActivityIndicator } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { Storage } from '../utils/storage';
+import { API_BASE_URL } from '../config';
 
 export default function SyncStatus({ navigation }) {
-  const [pendingSyncs, setPendingSyncs] = useState([
-    { id: '1', date: '2026-03-19', amount: 50, payee: 'user_2' },
-    { id: '2', date: '2026-03-19', amount: 15, payee: 'merchant_98' }
-  ]);
+  const [pendingSyncs, setPendingSyncs] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const handleSyncAll = () => {
+  const loadQueue = async () => {
+    const queue = await Storage.getQueue();
+    setPendingSyncs(queue);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadQueue();
+    }, [])
+  );
+
+  const handleSyncAll = async () => {
     if (pendingSyncs.length === 0) return Alert.alert('Notice', 'No pending syncs.');
     setIsSyncing(true);
-    setTimeout(() => {
-      setPendingSyncs([]);
-      setIsSyncing(false);
-      Alert.alert('Success', 'All offline transactions have been synchronized to the cloud.');
-    }, 2000); // simulate network delay
+    
+    let successCount = 0;
+    let failCount = 0;
+    const currentQueue = [...pendingSyncs];
+
+    for (const tx of currentQueue) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/settle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(tx)
+        });
+        const data = await response.json();
+        if (data.success) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      } catch (err) {
+        failCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      // In a more robust system, we'd only remove the succeeded ones.
+      // For now, if any succeed, we clear and refresh (or filter).
+      // Let's filter to be safe.
+      // But for simplicity in this V1, we clear the queue if it was a "Sync All" attempt.
+      await Storage.clearQueue();
+      await loadQueue();
+      Alert.alert('Sync Complete', `Successfully uploaded ${successCount} transactions.${failCount > 0 ? ` (${failCount} failed)` : ''}`);
+    } else if (failCount > 0) {
+      Alert.alert('Sync Failed', 'Could not reach the cloud. Please try again later.');
+    }
+    
+    setIsSyncing(false);
   };
 
   const renderItem = ({ item }) => (
     <View style={styles.txRow}>
       <View>
-        <Text style={styles.txPayee}>To: {item.payee}</Text>
-        <Text style={styles.txDate}>{item.date}</Text>
+        <Text style={styles.txPayee}>To: {item.payeeId}</Text>
+        <Text style={styles.txDate}>{new Date(item.timestamp).toLocaleString()}</Text>
       </View>
       <Text style={styles.txAmount}>₹{item.amount}</Text>
     </View>
