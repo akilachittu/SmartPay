@@ -92,7 +92,8 @@ app.post('/api/auth/otp', async (req, res) => {
     }
     return res.json({ token: 'mock_temp_token', isNewUser: true });
   } catch (err) {
-    res.status(500).json({ error: 'Database error' });
+    console.error('OTP DB Error:', err);
+    res.status(500).json({ error: 'Database error', trace: err.message });
   }
 });
 
