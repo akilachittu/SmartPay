@@ -23,6 +23,10 @@ import PINCreation from './src/screens/PINCreation';
 import ProfileScreen from './src/screens/Profile';
 import EditProfileScreen from './src/screens/EditProfile';
 import PaymentResult from './src/screens/PaymentResult';
+import { registerSW } from './src/register-pwa';
+
+// Register for offline support on Web
+registerSW();
 
 const Stack = createNativeStackNavigator();
 
