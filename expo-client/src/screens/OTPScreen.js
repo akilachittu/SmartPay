@@ -39,7 +39,7 @@ export default function OTPScreen({ navigation, route }) {
           const userId = 'user_1';
           GlobalStore.userId = userId;
           GlobalStore.mobileNumber = mobileNumber;
-          await Storage.saveUser({ userId: userId, mobileNumber: mobileNumber, name: 'Alice' });
+          await Storage.saveUser({ userId: userId, mobileNumber: mobileNumber, name: `User ${mobileNumber.slice(-4)}` });
           navigation.replace('Home');
         }
       } else {
